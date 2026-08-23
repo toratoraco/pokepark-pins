@@ -31,6 +31,7 @@ async function store(mode: IDBTransactionMode): Promise<IDBObjectStore> {
 
 export async function putPhoto(key: string, blob: Blob): Promise<void> {
   await reqToPromise((await store("readwrite")).put(blob, key));
+  markPhotoDirty(key);
 }
 
 export async function getPhoto(key: string): Promise<Blob | undefined> {
@@ -38,6 +39,59 @@ export async function getPhoto(key: string): Promise<Blob | undefined> {
 }
 
 export async function deletePhoto(key: string): Promise<void> {
+  await reqToPromise((await store("readwrite")).delete(key));
+  markPhotoDirty(key);
+}
+
+// ---- 同期用: dirty追跡と、dirtyにしない内部書き込み（リモートからのpull適用時に使う） ----
+
+const DIRTY_KEY = "pokepark-pins:dirty-photos";
+
+function readDirty(): Set<string> {
+  try {
+    return new Set(JSON.parse(localStorage.getItem(DIRTY_KEY) ?? "[]") as string[]);
+  } catch {
+    return new Set();
+  }
+}
+
+function writeDirty(set: Set<string>) {
+  localStorage.setItem(DIRTY_KEY, JSON.stringify([...set]));
+}
+
+export function markPhotoDirty(key: string) {
+  const set = readDirty();
+  set.add(key);
+  writeDirty(set);
+  window.dispatchEvent(new Event("photos-dirty"));
+}
+
+export function getDirtyPhotoKeys(): string[] {
+  return [...readDirty()];
+}
+
+export function clearPhotoDirty(key: string) {
+  const set = readDirty();
+  set.delete(key);
+  writeDirty(set);
+}
+
+/** 全写真をdirty扱いにする（バックアップJSONインポート後など、次回pushで全反映させたい時） */
+export async function markAllPhotosDirty(): Promise<void> {
+  const s = await store("readonly");
+  const keys = (await reqToPromise(s.getAllKeys())) as string[];
+  const set = readDirty();
+  keys.forEach((k) => set.add(k));
+  writeDirty(set);
+}
+
+/** リモートpullの適用用。dirtyにしない */
+export async function applyRemotePhoto(key: string, blob: Blob): Promise<void> {
+  await reqToPromise((await store("readwrite")).put(blob, key));
+}
+
+/** リモートpullの適用用。dirtyにしない */
+export async function removeLocalPhoto(key: string): Promise<void> {
   await reqToPromise((await store("readwrite")).delete(key));
 }
 

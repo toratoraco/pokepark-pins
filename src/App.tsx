@@ -5,6 +5,8 @@ import { PokeParkTab } from "./components/PokeParkTab";
 import { CentersTab } from "./components/CentersTab";
 import { IrregularTab } from "./components/IrregularTab";
 import { ExportImport } from "./components/ExportImport";
+import { SyncSettings } from "./components/SyncSettings";
+import { useSync } from "./sync/useSync";
 
 type Tab = "pokepark" | "centers" | "irregular";
 
@@ -14,8 +16,18 @@ const TABS: [Tab, string][] = [
   ["irregular", "その他"],
 ];
 
+const SYNC_DOT: Record<string, string> = {
+  synced: "sync-dot ok",
+  syncing: "sync-dot busy",
+  dirty: "sync-dot busy",
+  offline: "sync-dot warn",
+  auth: "sync-dot warn",
+  error: "sync-dot warn",
+};
+
 export default function App() {
   const col = useCollection();
+  const sync = useSync(col);
   const [tab, setTab] = useState<Tab>("pokepark");
 
   const parkOwned = KANTO_POKEMON.filter((p) => (col.state.pokepark[p.id] ?? 0) > 0).length;
@@ -24,7 +36,15 @@ export default function App() {
   return (
     <div className="app">
       <header className="header">
-        <h1>ピンズコレクション</h1>
+        <h1>
+          ピンズコレクション
+          {sync.status !== "unconfigured" && (
+            <span
+              className={SYNC_DOT[sync.status] ?? "sync-dot"}
+              title={`同期: ${sync.status}`}
+            />
+          )}
+        </h1>
         <p className="summary">
           ポケパーク {parkOwned}/{KANTO_POKEMON.length} ・ ポケセン {centersOwned}/
           {col.state.centers.length} ・ その他 {col.state.irregular.length}件
@@ -43,8 +63,9 @@ export default function App() {
         {tab === "irregular" && <IrregularTab col={col} />}
       </main>
       <footer className="footer">
+        <SyncSettings sync={sync} />
         <ExportImport col={col} />
-        <p className="hint">データはこのブラウザ内（localStorage）に保存されます。機種変更前にバックアップを。</p>
+        <p className="hint">データはこのブラウザ内（localStorage）に保存されます。同期設定をすればGitHub経由でスマホ・PC間の連携ができます。</p>
       </footer>
     </div>
   );

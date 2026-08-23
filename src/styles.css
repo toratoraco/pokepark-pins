@@ -317,3 +317,39 @@ button.delete.armed { background: #c0392b; color: #fff; border-color: #c0392b; f
 
 .footer { margin-top: 30px; border-top: 1px solid var(--border); padding-top: 14px; }
 .export-import { display: flex; gap: 8px; flex-wrap: wrap; }
+
+/* 同期（SyncSettings / ヘッダーのインジケータ） */
+.sync-dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  margin-left: 8px;
+  vertical-align: middle;
+  background: var(--muted);
+}
+.sync-dot.ok { background: #2e9e4f; }
+.sync-dot.busy { background: var(--gold); }
+.sync-dot.warn { background: var(--red); }
+
+.sync-settings { margin-bottom: 10px; }
+.sync-form {
+  margin-top: 10px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--card);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-width: 480px;
+}
+.sync-form label { display: flex; flex-direction: column; gap: 4px; font-size: 0.85rem; }
+.sync-form input {
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 0.9rem;
+}
+.sync-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.sync-form button.danger { color: #c0392b; }

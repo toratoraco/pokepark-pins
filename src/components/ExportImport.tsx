@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import { getAllPhotos, notifyPhotosUpdated, putPhoto } from "../db/photos";
+import { getAllPhotos, markAllPhotosDirty, notifyPhotosUpdated, putPhoto } from "../db/photos";
 import type { Collection } from "../store/useCollection";
 
 function blobToDataURL(blob: Blob): Promise<string> {
@@ -54,6 +54,8 @@ export function ExportImport({ col }: { col: Collection }) {
           const blob = await (await fetch(dataUrl)).blob();
           await putPhoto(key, blob);
         }
+        // 次回の同期pushで写真も全反映されるようにする
+        await markAllPhotosDirty();
         notifyPhotosUpdated();
         alert("インポートしました");
       } catch {
