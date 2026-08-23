@@ -202,7 +202,7 @@ export function PokeParkTab({ col }: { col: Collection }) {
               <input value={memoDraft} onChange={(e) => setMemoDraft(e.target.value)} />
             </label>
             <div className="filter-group">
-              {["ポケパーク", "交換", "購入", "チャールズ"].map((m) => (
+              {["ポケパーク", "交換", "購入", "その他"].map((m) => (
                 <button key={m} className="chip" onClick={() => setMemoDraft(m)}>
                   {m}
                 </button>

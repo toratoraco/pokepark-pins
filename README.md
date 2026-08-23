@@ -25,7 +25,7 @@
 
 画面下部の「同期設定」から、GitHubの**プライベートリポジトリ**をデータ置き場にした同期ができます。
 
-1. GitHubで空のプライベートリポジトリを作る（例: `pokepark-pins-data`、READMEだけ入れて作成）
+1. GitHubで空のプライベートリポジトリを作る（任意の名前、READMEだけ入れて作成）
 2. fine-grained PAT を作る: GitHub → Settings → Developer settings → Personal access tokens → Fine-grained tokens
    - Repository access: **データ用リポジトリのみ**を選択
    - Permissions: **Contents: Read and write** のみ

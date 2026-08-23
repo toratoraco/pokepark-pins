@@ -61,11 +61,11 @@ export function SyncSettings({ sync }: { sync: Sync }) {
           </p>
           <label>
             GitHubユーザー名
-            <input value={owner} onChange={(e) => setOwner(e.target.value)} placeholder="例: toratoraco" autoCapitalize="none" />
+            <input value={owner} onChange={(e) => setOwner(e.target.value)} placeholder="例: your-username" autoCapitalize="none" />
           </label>
           <label>
             データ用リポジトリ名（プライベート）
-            <input value={repo} onChange={(e) => setRepo(e.target.value)} placeholder="例: pokepark-pins-data" autoCapitalize="none" />
+            <input value={repo} onChange={(e) => setRepo(e.target.value)} placeholder="例: your-data-repo" autoCapitalize="none" />
           </label>
           <label>
             Personal Access Token
