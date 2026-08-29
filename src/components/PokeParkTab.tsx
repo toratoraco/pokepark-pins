@@ -6,6 +6,22 @@ import { PhotoSlot } from "./PhotoSlot";
 import { ProgressBar } from "./ProgressBar";
 
 type Filter = "all" | "owned" | "missing" | "dupes";
+const ACQUISITION_OPTIONS = ["ポケパーク", "交換", "購入", "その他"] as const;
+type AcquisitionKind = (typeof ACQUISITION_OPTIONS)[number];
+type AcquisitionFilter = "all" | "unset" | AcquisitionKind;
+
+const acquisitionFilterMatches = (memo: string, filter: AcquisitionFilter) => {
+  const normalized = memo.trim();
+  if (filter === "all") return true;
+  if (filter === "unset") return normalized === "";
+  if (filter === "その他") {
+    return (
+      normalized === "その他" ||
+      (normalized !== "" && !ACQUISITION_OPTIONS.slice(0, 3).some((kind) => normalized.includes(kind)))
+    );
+  }
+  return normalized.includes(filter);
+};
 
 const today = () => new Date().toISOString().slice(0, 10);
 
@@ -16,6 +32,7 @@ const fmtDate = (d: string) => {
 
 export function PokeParkTab({ col }: { col: Collection }) {
   const [filter, setFilter] = useState<Filter>("all");
+  const [acquisitionFilter, setAcquisitionFilter] = useState<AcquisitionFilter>("all");
   const [query, setQuery] = useState("");
   // タップで+1した時に初回入手日として記録する日付（過去の入手分を登録する時はここを変える）
   const [acqDate, setAcqDate] = useState(today);
@@ -65,6 +82,7 @@ export function PokeParkTab({ col }: { col: Collection }) {
     if (filter === "owned" && n === 0) return false;
     if (filter === "missing" && n > 0) return false;
     if (filter === "dupes" && n < 2) return false;
+    if (!acquisitionFilterMatches(col.state.pokeparkMemos[p.id] ?? "", acquisitionFilter)) return false;
     if (query && !p.ja.includes(query) && !p.en.toLowerCase().includes(query.toLowerCase()) && String(p.id) !== query) {
       return false;
     }
@@ -103,6 +121,27 @@ export function PokeParkTab({ col }: { col: Collection }) {
               key={key}
               className={filter === key ? "chip active" : "chip"}
               onClick={() => setFilter(key)}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+        <div className="filter-group" aria-label="取得経緯で絞り込み">
+          <span className="filter-label">取得経緯</span>
+          {(
+            [
+              ["all", "すべて"],
+              ["ポケパーク", "ポケパーク"],
+              ["交換", "交換"],
+              ["購入", "購入"],
+              ["その他", "その他"],
+              ["unset", "未設定"],
+            ] as [AcquisitionFilter, string][]
+          ).map(([key, label]) => (
+            <button
+              key={key}
+              className={acquisitionFilter === key ? "chip active" : "chip"}
+              onClick={() => setAcquisitionFilter(key)}
             >
               {label}
             </button>
@@ -202,7 +241,7 @@ export function PokeParkTab({ col }: { col: Collection }) {
               <input value={memoDraft} onChange={(e) => setMemoDraft(e.target.value)} />
             </label>
             <div className="filter-group">
-              {["ポケパーク", "交換", "購入", "その他"].map((m) => (
+              {ACQUISITION_OPTIONS.map((m) => (
                 <button key={m} className="chip" onClick={() => setMemoDraft(m)}>
                   {m}
                 </button>

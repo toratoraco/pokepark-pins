@@ -92,7 +92,14 @@ button { font-family: inherit; }
   border-radius: 8px;
   font-size: 0.9rem;
 }
-.filter-group { display: flex; gap: 4px; }
+.filter-group { display: flex; flex-wrap: wrap; gap: 4px; }
+.filter-label {
+  align-self: center;
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
 .acq-date {
   display: flex;
   align-items: center;
