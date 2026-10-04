@@ -127,7 +127,7 @@ export function useSync(col: Collection) {
     }
   };
 
-  // リモートの写真をローカルへ差分反映（リモート採用時のみ呼ぶ）
+  // リモートの写真をローカルへ差分反映。写真はデータ本体と独立して同期する。
   const pullPhotos = async (cfg: SyncConfig) => {
     const meta = metaRef.current;
     const entries = await listDir(cfg, PHOTOS_DIR);
@@ -158,27 +158,32 @@ export function useSync(col: Collection) {
   const pull = async (cfg: SyncConfig) => {
     const meta = metaRef.current;
     const f = await getFile(cfg, DATA_PATH);
-    if (!f) return; // まだリモートにデータがない
-    meta.dataSha = f.sha;
-    const payload = JSON.parse(b64ToText(f.contentB64)) as RemotePayload;
-    if (payload.updatedAt > meta.lastSyncedAt) {
-      if (isLocalDirty()) {
-        const useRemote = window.confirm(
-          "もう一方の端末に新しいデータがありますが、この端末にも未同期の変更があります。\n" +
-            "OK: リモートのデータを取り込む（この端末の未同期の変更は破棄）\n" +
-            "キャンセル: この端末のデータを優先（リモートを上書き）"
-        );
-        if (!useRemote) {
-          saveMeta();
-          return; // 直後のpushでリモートを上書きする
+    if (f) {
+      meta.dataSha = f.sha;
+      const payload = JSON.parse(b64ToText(f.contentB64)) as RemotePayload;
+      if (payload.updatedAt > meta.lastSyncedAt) {
+        if (isLocalDirty()) {
+          const useRemote = window.confirm(
+            "もう一方の端末に新しいデータがありますが、この端末にも未同期の変更があります。\n" +
+              "OK: リモートのデータを取り込む（この端末の未同期の変更は破棄）\n" +
+              "キャンセル: この端末のデータを優先（リモートを上書き）"
+          );
+          if (!useRemote) {
+            saveMeta();
+            return; // 直後のpushでリモートを上書きする
+          }
         }
+        applyingRemote.current = true;
+        col.importState(JSON.stringify(payload.state));
+        meta.localUpdatedAt = payload.updatedAt;
+        meta.lastSyncedAt = payload.updatedAt;
       }
-      applyingRemote.current = true;
-      col.importState(JSON.stringify(payload.state));
-      await pullPhotos(cfg);
-      meta.localUpdatedAt = payload.updatedAt;
-      meta.lastSyncedAt = payload.updatedAt;
     }
+
+    // 写真はCollectionStateに含まれず、写真だけを追加・削除した場合は
+    // data.jsonのupdatedAtが変わらない。そのため写真のpullはデータの
+    // 更新有無に関係なく毎回行う（データ更新直後の競合にも対応する）。
+    await pullPhotos(cfg);
     saveMeta();
   };
 

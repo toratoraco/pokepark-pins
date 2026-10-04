@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { deletePhoto, getPhoto, putPhoto } from "../db/photos";
 import { ConfirmButton } from "./ConfirmButton";
 import { PhotoCropper } from "./PhotoCropper";
@@ -64,43 +65,47 @@ export function PhotoSlot({ photoKey, title, size = 36 }: Props) {
           📷
         </button>
       )}
-      {cropFile && (
-        <PhotoCropper
-          file={cropFile}
-          onCancel={() => setCropFile(null)}
-          onSave={async (blob) => {
-            await putPhoto(photoKey, blob);
-            setCropFile(null);
-            refresh();
-          }}
-        />
-      )}
-      {viewing && url && (
-        <div className="modal-overlay" onClick={() => setViewing(false)}>
-          <div className="modal" onClick={(e) => e.stopPropagation()}>
-            <img className="photo-full" src={url} alt={title} />
-            <p className="modal-title">{title}</p>
-            <div className="form-buttons">
-              <button
-                onClick={() => {
-                  setViewing(false);
-                  inputRef.current?.click();
-                }}
-              >
-                撮り直す
-              </button>
-              <ConfirmButton
-                onConfirm={async () => {
-                  await deletePhoto(photoKey);
-                  setViewing(false);
-                  refresh();
-                }}
-              />
-              <button onClick={() => setViewing(false)}>閉じる</button>
+      {cropFile &&
+        createPortal(
+          <PhotoCropper
+            file={cropFile}
+            onCancel={() => setCropFile(null)}
+            onSave={async (blob) => {
+              await putPhoto(photoKey, blob);
+              setCropFile(null);
+              refresh();
+            }}
+          />,
+          document.body
+        )}
+      {viewing && url &&
+        createPortal(
+          <div className="modal-overlay" onClick={() => setViewing(false)}>
+            <div className="modal" onClick={(e) => e.stopPropagation()}>
+              <img className="photo-full" src={url} alt={title} />
+              <p className="modal-title">{title}</p>
+              <div className="form-buttons">
+                <button
+                  onClick={() => {
+                    setViewing(false);
+                    inputRef.current?.click();
+                  }}
+                >
+                  撮り直す
+                </button>
+                <ConfirmButton
+                  onConfirm={async () => {
+                    await deletePhoto(photoKey);
+                    setViewing(false);
+                    refresh();
+                  }}
+                />
+                <button onClick={() => setViewing(false)}>閉じる</button>
+              </div>
             </div>
-          </div>
-        </div>
-      )}
+          </div>,
+          document.body
+        )}
     </>
   );
 }
